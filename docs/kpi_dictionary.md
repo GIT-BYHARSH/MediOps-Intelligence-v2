@@ -17,3 +17,9 @@ Bill -> Claim -> Insurer decision -> Payment
 - Formula: Approved claims / (Approved + Partially Approved + Rejected claims) x 100. Pending claims are excluded because no decision has been made yet.
 - Data used: claim_status in the claims table
 - Why it matters: A falling approval rate means insurers are paying in full less often. Finance leaders use it to spot which insurers or hospitals need documentation fixes or contract renegotiation.
+
+### Claim Gap Amount
+- Business meaning: The total money the hospital asked insurers to pay but will not receive, across all claims where the insurer has made a decision.
+- Formula: Sum of (claim_amount - approved_amount) for claims with status Approved, Partially Approved or Rejected. Pending claims are excluded because no decision has been made yet.
+- Data used: claim_amount, approved_amount, claim_status in the claims table
+- Why it matters: This is the money left on the table. It is the starting point for estimating how much cash the finance team could recover by appealing or correcting claims.
