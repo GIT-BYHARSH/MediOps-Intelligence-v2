@@ -19,5 +19,6 @@ Short notes after each step: what I built and why. Used later for the report, vi
 - Why: the data is simulated, so planting known patterns lets me prove my analysis finds them.
 
 ## Step 4: Data generation (in progress)
-- Built: hospitals (25 fictional), departments (205), insurers (8 fictional).
+- Built: hospitals (25 fictional), departments (205), insurers (8 fictional), patients (100,000).
+- Patients: no names are stored (privacy by design). 28% are self-pay (no insurer_id). Age groups follow hospital-like demand. A city gets more patients when its hospitals have more beds.
 - Why: separate small scripts per table, with a fixed random seed so results are reproducible. Fictional names are used because the planted problems must not be attached to real hospitals or insurers.
