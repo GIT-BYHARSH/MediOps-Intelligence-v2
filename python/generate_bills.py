@@ -67,7 +67,8 @@ surgery_charge = np.round(surgery * mult)
 total_amount = consultation_charge + medicine_charge + lab_charge + room_charge + surgery_charge
 
 # ---------- Bill date = day of discharge ----------
-bill_date = df["visit_date"] + pd.to_timedelta(df["length_of_stay"], unit="D")
+# Patients still admitted at year-end get an interim bill dated on the reporting date
+bill_date = (df["visit_date"] + pd.to_timedelta(df["length_of_stay"], unit="D")).clip(upper=pd.Timestamp("2025-12-31"))
 
 # ---------- Who pays? ----------
 has_insurer = df["insurer_id"].notna().to_numpy()

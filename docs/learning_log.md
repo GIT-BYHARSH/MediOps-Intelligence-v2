@@ -56,3 +56,11 @@ Short notes after each step: what I built and why. Used later for the report, vi
 - Result 2 (simulation, 10,000 hours): priority score recovers Rs 21.87 crore, largest amount first Rs 16.68 crore, quickest first Rs 14.00 crore, random order Rs 2.44 crore. Priority score is 9.0 times better than random and 31% better than largest first, using the same time.
 - Why: this answers the project question (which claims to chase first) and gives the headline number for the resume, README and report.
 - SQL skills added: CTE (WITH), RANK() OVER, NTILE, running total with SUM() OVER (ROWS UNBOUNDED PRECEDING), UNION ALL, MAX() FILTER ... OVER.
+
+## Step 8: Python connection and data-quality checks
+- Built: python/db.py (one shared database connection that reads the password from the private .env file, which Git ignores), python/data_quality_checks.py (27 automatic checks that write docs/data_quality_report.md).
+- Check groups: duplicates, impossible values, date logic, missing values, business rules. A check passes when it finds 0 bad rows.
+- Problem found: the first run passed 25 of 27. 1,056 bills were dated after the reporting date (31 Dec 2025) because bill_date = visit_date + length_of_stay for patients admitted late in December. 662 claims were dated before their own bill because of that. Fix: bill dates are capped at 31 Dec 2025 (an interim bill for patients still admitted at year-end). Amounts did not change.
+- Result after fixing the generator and reloading the database: 27 of 27 checks pass. Row counts unchanged, pending claims unchanged (16,849).
+- Expected empty values (not errors): 28.0% self-pay patients (no insurer), 5.5% pending claims (no approved amount or settlement date), 74.6% of claims have no rejection reason (approved or pending).
+- Lesson: write checks that can fail, run them, and fix the cause at the source (the generator), then rebuild in the same order: bills, claims, schema, load. Keep the quality report in the project as evidence.
