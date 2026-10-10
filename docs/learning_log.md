@@ -28,3 +28,8 @@ Short notes after each step: what I built and why. Used later for the report, vi
 
 - Bills (500,000, one per visit): charges built from department, visit type, stay length and surgery. Private hospitals cost most (price multiplier). 61% of bills are insurance (72% insured x 85% who file). Insurance bills start as "Awaiting Claim" and the claims step will set their final status.
 - Why: bill size drives how much money a denial puts at risk, and it makes private-hospital and surgery claims the biggest recovery opportunities.
+
+- Claims (305,835, one per insurance bill): each claim gets its own chance of rejection (baseline 10%) and partial approval (baseline 14%), and the planted stories raise those chances for specific groups. A claim whose settlement date falls after the reporting date (31 Dec 2025) stays Pending. The outcome is written back to the bills (Approved = Paid, Partially Approved = Partially Paid, Rejected or Pending = Pending).
+- Verified stories: insurer 4 at hospitals 6 and 7 rejects 27.4% vs 10.0% (63% Incomplete Documents); Cardiology at hospital 4 rejects 22.2% (71% Coding Error); insurer 3 settles in 60 days vs 20; hospital 10 holds all 1,389 pending claims older than 90 days; bills over 2 lakh are rejected 20.7% vs 10.2%; surgery is partially approved 40.2% vs 14.0%.
+- Why: this table is the core of the project. Every later SQL, Python, ML and dashboard result must rediscover these known stories, which proves the analysis works.
+- Run order matters: the claims script edits bills.csv, so always run generators in this order: hospitals, departments, insurers, patients, visits, bills, claims.
