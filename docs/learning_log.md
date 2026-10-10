@@ -33,3 +33,8 @@ Short notes after each step: what I built and why. Used later for the report, vi
 - Verified stories: insurer 4 at hospitals 6 and 7 rejects 27.4% vs 10.0% (63% Incomplete Documents); Cardiology at hospital 4 rejects 22.2% (71% Coding Error); insurer 3 settles in 60 days vs 20; hospital 10 holds all 1,389 pending claims older than 90 days; bills over 2 lakh are rejected 20.7% vs 10.2%; surgery is partially approved 40.2% vs 14.0%.
 - Why: this table is the core of the project. Every later SQL, Python, ML and dashboard result must rediscover these known stories, which proves the analysis works.
 - Run order matters: the claims script edits bills.csv, so always run generators in this order: hospitals, departments, insurers, patients, visits, bills, claims.
+## Step 5: PostgreSQL database
+- Built: database mediops, sql/schema.sql (7 tables with primary and foreign keys), sql/load_data.sql (bulk load with COPY).
+- Result: row counts match the CSV files exactly (25 hospitals, 205 departments, 8 insurers, 100,000 patients, 500,000 visits, 500,000 bills, 305,835 claims).
+- Why: foreign keys stop impossible data (a visit at a hospital that does not exist). Empty cells load as NULL, which means no value (self-pay insurer, pending claim amounts and dates). Load order follows the keys: dimensions first, then facts.
+- Re-running: load_data.sql adds rows, so run schema.sql first (it drops and recreates the tables) before loading again.
