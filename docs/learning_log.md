@@ -22,3 +22,6 @@ Short notes after each step: what I built and why. Used later for the report, vi
 - Built: hospitals (25 fictional), departments (205), insurers (8 fictional), patients (100,000).
 - Patients: no names are stored (privacy by design). 28% are self-pay (no insurer_id). Age groups follow hospital-like demand. A city gets more patients when its hospitals have more beds.
 - Why: separate small scripts per table, with a fixed random seed so results are reproducible. Fictional names are used because the planted problems must not be attached to real hospitals or insurers.
+
+- Visits (500,000): dates weighted so December and January are about 40% busier (story 4). Hospital chosen mostly in the patient's own city, bigger hospitals get more visits. Department always belongs to the visit's hospital (checked: 0 mismatches). Waiting time is 35% longer in winter. Surgery is about 35% of admitted visits.
+- Why: consistent keys and verified planted patterns make later SQL findings trustworthy.
