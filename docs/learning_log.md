@@ -64,3 +64,20 @@ Short notes after each step: what I built and why. Used later for the report, vi
 - Result after fixing the generator and reloading the database: 27 of 27 checks pass. Row counts unchanged, pending claims unchanged (16,849).
 - Expected empty values (not errors): 28.0% self-pay patients (no insurer), 5.5% pending claims (no approved amount or settlement date), 74.6% of claims have no rejection reason (approved or pending).
 - Lesson: write checks that can fail, run them, and fix the cause at the source (the generator), then rebuild in the same order: bills, claims, schema, load. Keep the quality report in the project as evidence.
+- Charts (make_charts.py, assets/charts): winter overload, denial hotspots, recovery strategies, claim gap by treatment. Each title states the insight (for example "Surgery is 7% of claims but 75% of the money not paid").
+
+## Step 9: Machine learning, models and the theoretical ceiling
+- Built: build_features.py (one row per decided claim, 288,986 rows; labels kept separate from inputs to avoid data leakage) and train_models.py.
+- Leakage: columns known only after the decision (approved_amount, rejection_reason, settlement_date, claim_status) are never used as inputs.
+- Split by time, not at random: train on visits before 1 Jul 2025 (228,452 claims), test on 1 Jul 2025 onward (60,534 claims). This mimics predicting the future from the past.
+- Two questions: REJECTION (fully rejected, 11% of claims) and SHORTFALL (rejected or partially approved, 27% of claims). Models: logistic regression (simple baseline) and gradient boosting (finds combinations such as insurer + hospital).
+- Results (AUC, 0.5 = guessing): rejection 0.528 logistic, 0.532 boosting, ceiling 0.533. Shortfall 0.557 logistic, 0.559 boosting, ceiling 0.559. The top 10% riskiest claims catch about 15% of rejections and 18% of shortfalls.
+- Ceiling: the best AUC any model could reach if it knew the exact rules used to build the data. Because simulated outcomes are random draws with raised odds, the ceiling is low, and the model reaches 99.8% of it. So the low AUC is a property of the simulated outcomes, not a weak model. State this clearly in the report. Real denial models also use signals we do not simulate (documentation completeness, prior authorisation); list this as future work.
+- Do not headline AUC 0.53 on the resume without the ceiling comparison. The strongest headline remains the SQL recovery result.
+
+## Step 10: Explaining the model
+- Method: permutation importance (shuffle one input at a time on unseen test claims and measure the drop in AUC). Chart: assets/charts/05_model_drivers.png.
+- Rejection drivers: hospital_id 0.016, is_winter 0.011, insurer_id 0.009, claim_amount 0.002 (large bills). Hospital and insurer matter together because the insurer problem only happens at two hospitals (an interaction a boosting model can learn).
+- Shortfall drivers: treatment_type 0.044 (surgery) far above everything else, then hospital, winter, diagnosis, insurer. Diagnosis probably acts as a stand-in for surgery cases.
+- The model points at the planted stories without being told: insurer and hospital (story 1), big bills (story 6), surgery (story 7), winter (story 4).
+- Limits: permutation importance splits credit between related inputs (room charge, surgery charge and claim amount move together), so a small bar does not prove an input is unimportant. Story 2 (one department at one hospital) affects only about 1,000 claims, so it does not show up in the top inputs.
