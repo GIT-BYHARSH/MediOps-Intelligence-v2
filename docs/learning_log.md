@@ -87,5 +87,13 @@ Short notes after each step: what I built and why. Used later for the report, vi
 - Forecast: Jan 2026 about 16,900 claims and a 14.7% denial rate, then Feb about 10,900 claims at 10.7% and Mar about 12,200 at 10.8%.
 - Limits to state in the report: only 24 months of history, so only one earlier winter to learn from and 6 test months. The very low error is partly because simulated seasonality repeats exactly and there is no growth trend. Real data would be noisier, so treat 0.8% as a best case. A simple method that is checked in a backtest is better than a complex one that is not.
 
+## Step 12: Anomaly alerts
+- Built: anomaly_alerts.py. It compares every hospital, insurer-hospital pair, department and month with its peers and writes data/processed/alerts.csv.
+- Method (robust z-score): typical = median of the peers, spread = 1.48 x MAD (median absolute deviation) but never below a minimum floor. z = (value - typical) / spread. Alert when z is at least 5 (unusually high). Median and MAD are not pulled around by the very outliers being hunted, unlike mean and standard deviation. The floor stops tiny differences from looking big when peers are almost identical (for example, almost no hospital has old pending claims).
+- Five checks: denial rate of insurer-hospital pairs, denial rate of hospital departments, share of claims pending over 90 days per hospital, average settlement days per insurer, monthly denial rate. Groups under 200 decided claims are skipped.
+- Result: exactly 9 alerts, all genuine and none false. Aegis at Coastal Care (z 17.6, 307 extra rejections) and at Banyan Tree (z 17.5, 374); Meridian Heart Cardiology (z 11.5, 124); Lakeview General Hospital pending backlog (z 16.2, 1,389 stuck claims); Unity General settlement time (z 40, about 1.1 million extra waiting days); December and January denial spikes (z 12 to 15). Note December 2025 shows fewer extra rejections (153) because many of its claims are still pending.
+- Confounding handled: the other Coastal Care and Banyan Tree departments look slightly high only because of Aegis. They stay under the alert threshold, so only the real cause is flagged.
+- Limit: the alerts compare against peers, not against a model of cause. They tell the team where to look, not why.
+
 ## Step 10 (continued): limits of the importance method
 - Limits: permutation importance splits credit between related inputs (room charge, surgery charge and claim amount move together), so a small bar does not prove an input is unimportant. Story 2 (one department at one hospital) affects only about 1,000 claims, so it does not show up in the top inputs.
