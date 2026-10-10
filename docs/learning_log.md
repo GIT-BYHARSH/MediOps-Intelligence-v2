@@ -80,4 +80,12 @@ Short notes after each step: what I built and why. Used later for the report, vi
 - Rejection drivers: hospital_id 0.016, is_winter 0.011, insurer_id 0.009, claim_amount 0.002 (large bills). Hospital and insurer matter together because the insurer problem only happens at two hospitals (an interaction a boosting model can learn).
 - Shortfall drivers: treatment_type 0.044 (surgery) far above everything else, then hospital, winter, diagnosis, insurer. Diagnosis probably acts as a stand-in for surgery cases.
 - The model points at the planted stories without being told: insurer and hospital (story 1), big bills (story 6), surgery (story 7), winter (story 4).
+## Step 11: Forecasting
+- Built: forecast.py. It forecasts monthly claim volume and denial rate (by month of the visit) for Jan-Mar 2026 and saves assets/charts/06_forecast.png.
+- Method: backtest first. Pretend it is 30 Jun 2025, forecast Jul-Dec 2025, compare with what really happened (error = MAPE, mean absolute percentage error, lower is better). Four simple methods: last value, 12-month average, same month last year, and same month last year adjusted by the recent trend.
+- Backtest result (claims per month): last value 6.1%, 12-month average 10.0%, same month last year 0.9%, last year x recent trend 0.8%. Denial rate: 6.6%, 10.5%, 2.5%, 2.5%. The seasonal methods win because winter is a repeating pattern that the other methods cannot see.
+- Forecast: Jan 2026 about 16,900 claims and a 14.7% denial rate, then Feb about 10,900 claims at 10.7% and Mar about 12,200 at 10.8%.
+- Limits to state in the report: only 24 months of history, so only one earlier winter to learn from and 6 test months. The very low error is partly because simulated seasonality repeats exactly and there is no growth trend. Real data would be noisier, so treat 0.8% as a best case. A simple method that is checked in a backtest is better than a complex one that is not.
+
+## Step 10 (continued): limits of the importance method
 - Limits: permutation importance splits credit between related inputs (room charge, surgery charge and claim amount move together), so a small bar does not prove an input is unimportant. Story 2 (one department at one hospital) affects only about 1,000 claims, so it does not show up in the top inputs.
