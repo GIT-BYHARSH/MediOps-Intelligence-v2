@@ -27,6 +27,8 @@ S3_INSURER, S3_DAYS = 3, 60
 S5_HOSPITAL, S5_START, S5_END, S5_PENDING = 10, pd.Timestamp("2025-03-01"), pd.Timestamp("2025-09-30"), 0.30
 S6_THRESHOLD, S6_REJECT, S6_REASON = 200_000, 0.20, "Medical Necessity Not Met"
 S7_PARTIAL = 0.40
+S4_MONTHS = [12, 1]      # winter overload months
+S4_REJECT_BOOST = 0.04   # winter claims get 4 percentage points more rejection
 FOCUS_SHARE = 0.65       # a planted reason makes up this share of denials in its group
 
 rng = np.random.default_rng(RANDOM_SEED)
@@ -44,7 +46,7 @@ def focused_weights(reason, share):
 # ---------- Load and join the data ----------
 bills = pd.read_csv(BILLS_PATH, parse_dates=["bill_date"])
 visits = pd.read_csv(RAW / "visits.csv",
-                     usecols=["visit_id", "patient_id", "hospital_id", "department_id", "treatment_type"])
+                    usecols=["visit_id", "patient_id", "visit_date", "hospital_id", "department_id", "treatment_type"])
 patients = pd.read_csv(RAW / "patients.csv", usecols=["patient_id", "insurer_id"])
 departments = pd.read_csv(RAW / "departments.csv", usecols=["department_id", "department_name"])
 
@@ -82,6 +84,7 @@ m1 = (insurer == S1_INSURER) & np.isin(hospital, S1_HOSPITALS)
 m2 = (hospital == S2_HOSPITAL) & (df["department_name"] == S2_DEPARTMENT).to_numpy()
 m6 = total > S6_THRESHOLD
 m7 = is_surgery
+m4 = np.isin(pd.to_datetime(df["visit_date"]).dt.month.to_numpy(), S4_MONTHS)   # story 4
 
 # ---------- Probability of rejection / partial approval for each claim ----------
 p_reject = np.full(n, BASE_REJECT)
@@ -89,6 +92,7 @@ p_partial = np.full(n, BASE_PARTIAL)
 p_reject[m1] = S1_REJECT
 p_reject[m2] = S2_REJECT
 p_reject[m6] = S6_REJECT
+p_reject[m4] += S4_REJECT_BOOST
 p_partial[m7] = S7_PARTIAL
 
 # ---------- Decide the status by "rolling a die" for every claim ----------
@@ -175,7 +179,7 @@ print(f"Story 3: average settlement days, insurer {S3_INSURER}: "
 old_pending = is_pending & ((REPORT_DATE - claim_date).dt.days > 90).to_numpy()
 print("\nStory 5: Pending claims older than 90 days, top hospitals:")
 print(pd.Series(hospital[old_pending]).value_counts().head(3))
-
+print(f"Story 4: rejection rate for December/January visits {rate(m4, 'Rejected'):.1f}% vs other months {rate(~m4, 'Rejected'):.1f}%")
 print(f"\nStory 6: rejection rate for bills over 2 lakh {rate(m6, 'Rejected'):.1f}% vs {rate(~m6, 'Rejected'):.1f}% for others")
 print(f"Story 7: partial approval rate, surgery {rate(m7, 'Partially Approved'):.1f}% vs other treatments {rate(~m7, 'Partially Approved'):.1f}%")
 
