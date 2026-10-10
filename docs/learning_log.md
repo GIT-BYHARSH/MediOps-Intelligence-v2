@@ -38,3 +38,10 @@ Short notes after each step: what I built and why. Used later for the report, vi
 - Result: row counts match the CSV files exactly (25 hospitals, 205 departments, 8 insurers, 100,000 patients, 500,000 visits, 500,000 bills, 305,835 claims).
 - Why: foreign keys stop impossible data (a visit at a hospital that does not exist). Empty cells load as NULL, which means no value (self-pay insurer, pending claim amounts and dates). Load order follows the keys: dimensions first, then facts.
 - Re-running: load_data.sql adds rows, so run schema.sql first (it drops and recreates the tables) before loading again.
+
+## Step 6: SQL analysis (in progress)
+- Overall KPIs (analysis_01): denial rate 10.4%, approval rate 73.8%, claim gap Rs 93.67 crore, recoverable amount Rs 59.31 crore (about 63% of the gap is fixable), average settlement 23.7 days. Pending claims are excluded from rates, so approval rate (73.8%) is higher than the raw approved share (69.8%).
+- By insurer: Unity General Insurance takes 59.9 days vs about 20 for the others (story 3 found). Aegis looks only slightly high overall (11.4%), because its problem is hidden by averaging.
+- Drill-down (analysis_02): Aegis at Coastal Care and Banyan Tree rejects 27.5% and 27.4% with 62-64% Incomplete Documents (story 1 found). Meridian Heart Cardiology rejects 22.2% with 71% Coding Error (story 2 found).
+- Lessons: a summary can hide a problem, so drill down by another dimension. Use HAVING to ignore tiny groups. A problem in one dimension can leak into another (confounding): Coastal Care and Banyan Tree departments look high only because of Aegis.
+- SQL skills used: COUNT FILTER, JOIN across 4 tables, GROUP BY, HAVING, ORDER BY, LIMIT.
