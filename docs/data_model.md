@@ -1,14 +1,13 @@
 # Data Model
 
 ## Columns required by the KPI dictionary
-1.claim_amount
-2.approved_amount
-3.claim_status
-4.rejection_reason
-5.claim_date 
-6.settlement_date
+1. claim_amount
+2. approved_amount
+3. claim_status
+4. rejection_reason
+5. claim_date
+6. settlement_date
 
-## Extra information needed to answer "which one?"
 ## Extra information needed to answer "which one?"
 - Insurer (which company decided the claim)
 - Hospital (where the care happened)
@@ -29,7 +28,7 @@
 
 ### Fact tables (events with numbers)
 - fact_visit: visit_id, patient_id, hospital_id, department_id, visit_date, visit_type, diagnosis, treatment_type, waiting_minutes, length_of_stay
-- fact_bill: bill_id, visit_id, bill_date, total_amount, payment_method, payment_status
+- fact_bill: bill_id, visit_id, bill_date, consultation_charge, medicine_charge, lab_charge, room_charge, surgery_charge, total_amount, payment_method, payment_status
 - fact_claim: claim_id, bill_id, visit_id, insurer_id, claim_amount, approved_amount, claim_status, rejection_reason, claim_date, settlement_date
 
 ## Relationships

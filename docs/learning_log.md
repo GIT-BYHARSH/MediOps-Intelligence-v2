@@ -25,3 +25,6 @@ Short notes after each step: what I built and why. Used later for the report, vi
 
 - Visits (500,000): dates weighted so December and January are about 40% busier (story 4). Hospital chosen mostly in the patient's own city, bigger hospitals get more visits. Department always belongs to the visit's hospital (checked: 0 mismatches). Waiting time is 35% longer in winter. Surgery is about 35% of admitted visits.
 - Why: consistent keys and verified planted patterns make later SQL findings trustworthy.
+
+- Bills (500,000, one per visit): charges built from department, visit type, stay length and surgery. Private hospitals cost most (price multiplier). 61% of bills are insurance (72% insured x 85% who file). Insurance bills start as "Awaiting Claim" and the claims step will set their final status.
+- Why: bill size drives how much money a denial puts at risk, and it makes private-hospital and surgery claims the biggest recovery opportunities.
