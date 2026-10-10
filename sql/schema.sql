@@ -1,6 +1,10 @@
 -- MediOps Intelligence v2: database schema
 -- Order matters: tables that others point to are created first.
 
+-- Views from sql/reporting_layer.sql depend on these tables, so remove them first
+DROP VIEW IF EXISTS report_recovery_priority;
+DROP VIEW IF EXISTS report_claim;
+
 DROP TABLE IF EXISTS fact_claim;
 DROP TABLE IF EXISTS fact_bill;
 DROP TABLE IF EXISTS fact_visit;

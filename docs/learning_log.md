@@ -95,5 +95,12 @@ Short notes after each step: what I built and why. Used later for the report, vi
 - Confounding handled: the other Coastal Care and Banyan Tree departments look slightly high only because of Aegis. They stay under the alert threshold, so only the real cause is flagged.
 - Limit: the alerts compare against peers, not against a model of cause. They tell the team where to look, not why.
 
+## Step 13: Reporting layer for Power BI
+- Built: sql/reporting_layer.sql with dim_date (731 days), view report_claim (one row per claim, 305,835 rows) and view report_recovery_priority (49,069 recoverable claims).
+- Why: the operational tables form a chain (claim, bill, visit, hospital). Power BI works best with a star: one central fact table linked directly to each dimension. The view flattens the chain so the report model stays simple and filters work in one direction.
+- report_claim already holds the KPI building blocks: is_decided, is_rejected, is_approved, claim_gap, recoverable_amount, is_preventable, settlement_days, pending_age_days, aging_bucket. Calculating them once in SQL means Power BI and SQL give the same answers.
+- Checks: claim gap Rs 95.57 crore, recoverable Rs 61.06 crore, 1,389 claims pending over 90 days and expected recovery Rs 31.27 crore all match the earlier analyses.
+- schema.sql now drops the views first, so reloading the base tables never fails because of dependent views. Re-run order after any data change: schema.sql, load_data.sql, reporting_layer.sql.
+
 ## Step 10 (continued): limits of the importance method
 - Limits: permutation importance splits credit between related inputs (room charge, surgery charge and claim amount move together), so a small bar does not prove an input is unimportant. Story 2 (one department at one hospital) affects only about 1,000 claims, so it does not show up in the top inputs.
