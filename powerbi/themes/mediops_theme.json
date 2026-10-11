@@ -1,0 +1,44 @@
+{
+  "name": "MediOps Intelligence",
+  "dataColors": [
+    "#2f6db5",
+    "#d64545",
+    "#2e9e6b",
+    "#e8912d",
+    "#7a5cc2",
+    "#c3cbd6",
+    "#23436b",
+    "#f2c230"
+  ],
+  "background": "#FFFFFF",
+  "foreground": "#1c2733",
+  "tableAccent": "#12263f",
+  "good": "#2e9e6b",
+  "neutral": "#e8912d",
+  "bad": "#d64545",
+  "maximum": "#2f6db5",
+  "center": "#f2c230",
+  "minimum": "#c3cbd6",
+  "textClasses": {
+    "title": {
+      "fontSize": 12,
+      "fontFace": "Segoe UI Semibold",
+      "color": "#1c2733"
+    },
+    "label": {
+      "fontSize": 10,
+      "fontFace": "Segoe UI",
+      "color": "#8a95a5"
+    },
+    "callout": {
+      "fontSize": 28,
+      "fontFace": "Segoe UI Semibold",
+      "color": "#1c2733"
+    },
+    "header": {
+      "fontSize": 10,
+      "fontFace": "Segoe UI Semibold",
+      "color": "#1c2733"
+    }
+  }
+}

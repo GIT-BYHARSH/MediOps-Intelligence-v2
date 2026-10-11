@@ -3,3 +3,5 @@ __pycache__/
 .env
 data/raw/*.csv
 data/processed/*.csv
+
+powerbi/*.pbix
