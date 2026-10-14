@@ -122,7 +122,19 @@ Short notes after each step: what I built and why. Used later for the report, vi
 - Heatmap: matrix with hospital_name on rows, Insurer Label (first word of insurer_name) on columns, Denial Rate as values. Conditional formatting gradient green #2E9E6B to red #D64545. The planted story is visible: Aegis at Banyan Tree 28.6% and Coastal Care 28.8% are the only red cells.
 - Lesson: long labels hide a heatmap. A DAX column `Insurer Label = PATHITEM(SUBSTITUTE(dim_insurer[insurer_name], " ", "|"), 1)` plus turning Auto-size from Fit to content to Grow to fit, then dragging the row-header divider, fitted most of the 8 insurers.
 - Denial reasons bar: Claim Gap (Cr) by rejection_reason, Blank filtered out. Claim gap by hospital: same visual copied, Y-axis swapped to hospital_name. Banyan Tree, Sunrise and Coastal Care lead, which matches the planted revenue-loss story.
-- Still to do: Recovery Worklist (page 3), Outlook & Alerts (page 4), navigation buttons, tooltip/toggle extras.
+- Still to do: navigation buttons on the sidebar, tooltip/toggle extras.
+
+## Step 17: Outlook & Alerts (page 4)
+- Built by duplicating page 3, swapping the background to page4_outlook_alerts.png.
+- Python writes report_forecast (24 months of actuals plus Jan-Mar 2026 using "last year x recent trend", the method chosen in forecast.py). Jan 2026 is forecast at about 14.7% denial, which continues the planted winter story.
+- Line chart: month_start on X (date, not hierarchy), denial_rate on Y, series in Legend (Actual vs Forecast). Lesson: a date hierarchy rolled the months up to years and hid the winter spikes; Count of series on Y drew a flat line.
+- Alerts table: report_alert with Don't summarize on alert_rank, sorted 1 to 9.
+
+## Step 16: Recovery Worklist (page 3)
+- Built by duplicating page 2, swapping the background to page3_recovery_worklist.png, and deleting the three page-2 charts.
+- Python now also writes report_recovery_curve (~250 points of cumulative hours vs expected recovery, plus a random-order diagonal) and report_worklist_top10 (10 claims, ready-made columns). At 10,000 hours the priority path recovers Rs 21.87 Cr, matching the strategy table.
+- Lesson: never put 49,000 claim rows on a line chart. Downsample the curve in Python. Never let Power BI Sum a rank column; set Don't summarize, or include a unique field so rows do not collapse.
+- Curve: X = hours_thousand (max 40), Y = Priority order (blue) and Random order (grey). Table: Rank, Hospital, Insurer, Reason, Expected (L), Hours.
 
 - Added python/export_dashboard_tables.py: it builds report_alert (9 alerts with headline, detail, severity, rank), report_strategy (4 strategies with expected recovery) and report_alert_top5 (top 5 alerts as numbered text lines) in PostgreSQL. Why: Power BI cannot compute these itself (the alerts come from Python anomaly checks, the strategy results from a 10,000-hour simulation), so Python writes them as tables and Power BI only displays them.
 - Built: Recovery by strategy column chart (Priority score 21.87 Cr vs Random 2.44 Cr, about 9x) and the Alerts panel on page 1.
