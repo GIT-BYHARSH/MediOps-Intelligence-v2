@@ -92,10 +92,12 @@ A small assistant on top of the same database. The rule is simple: **numbers com
 |---|---|---|
 | Daily recovery brief | Short brief for the finance head from live KPIs, alerts and top claims | `python python/daily_brief.py` |
 | Appeal letter drafter | Drafts re-review letters for the top-priority claims, with a checklist of enclosures | `python python/appeal_letters.py 5` |
-| Ask the data | Plain-English question, answered with SQL the user can see | `python python/copilot.py "which insurer is slowest?"` |
-| Demo app | All three in one page | `streamlit run python/app.py` |
+| Ask the data (chat) | Plain-English questions with follow-ups, an automatic chart and the SQL shown | `python python/copilot.py "which insurer is slowest?"` |
+| Alert investigator | Pick an alert; the app runs drill-down queries and explains the likely cause (as a hypothesis) and a next action | in the app |
+| What-if simulator | Sliders for team hours, win chance, effort and staff cost; recovery by strategy updates live | in the app |
+| Demo app | All of the above in one page | `streamlit run python/app.py` |
 
-Guardrails (tested in `python/test_sql_guard.py`, `python/test_ai_flow.py` and `python/test_app.py`, 48 tests, no API key needed; the language model is replaced by a fake one that tries attacks and invents numbers):
+Guardrails (tested in `python/test_sql_guard.py`, `python/test_ai_flow.py` and `python/test_app.py`, 59 tests, no API key needed; the language model is replaced by a fake one that tries attacks and invents numbers):
 - AI-written SQL must be a single SELECT, may only use allow-listed reporting views (raw fact tables and the patient table are blocked), and is wrapped with a row limit.
 - It runs inside a read-only database transaction with a time limit, so even a query that slipped through could not change data.
 - Every number in AI-written text is checked against the source facts. A brief is flagged, and a letter with an invented number is replaced by the template.
@@ -103,6 +105,21 @@ Guardrails (tested in `python/test_sql_guard.py`, `python/test_ai_flow.py` and `
 - Works with no API key (templates plus a built-in question list). With a key, any OpenAI-compatible provider works; see `.env.example`. The key stays in the private `.env` file.
 
 Sample outputs: [daily brief](docs/sample_outputs/daily_brief.md), [appeal letters](docs/sample_outputs/appeal_letters.md).
+
+**Daily brief** (every number is checked against the data)
+![Daily brief](assets/app/daily_brief.png)
+
+**Ask the data** (chart and table are built automatically; the SQL is always shown)
+![Ask the data](assets/app/ask_the_data.png)
+
+**Alert investigator** (evidence from drill-down queries, then a likely cause to verify)
+![Alert investigator](assets/app/investigate_alerts.png)
+
+**What-if simulator** (change hours, win chance, effort and staff cost)
+![What-if simulator](assets/app/what_if.png)
+
+**Appeal letter drafter** (facts come from the claim; unknowns stay as [placeholders]; a person reviews and signs)
+![Appeal letters](assets/app/appeal_letters.png)
 
 ## Honest notes on the machine learning
 - Inputs known only after a decision (approved amount, rejection reason, settlement date) are never used (no leakage).

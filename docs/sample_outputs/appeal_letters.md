@@ -21,8 +21,8 @@ The claim was returned because documentation was reported as incomplete. We are 
 - Investigation and laboratory reports
 - Treating doctor's notes
 
-Sincerely,
-[Name], Revenue Cycle Team, Silverline Super Speciality Hospital
+Sincerely,  
+[Name], Revenue Cycle Team, Silverline Super Speciality Hospital  
 Policy / member reference: [to be filled]
 
 *Mode: template*
@@ -46,8 +46,8 @@ The claim was returned because documentation was reported as incomplete. We are 
 - Investigation and laboratory reports
 - Treating doctor's notes
 
-Sincerely,
-[Name], Revenue Cycle Team, Lotus Care Hospital
+Sincerely,  
+[Name], Revenue Cycle Team, Lotus Care Hospital  
 Policy / member reference: [to be filled]
 
 *Mode: template*
@@ -71,8 +71,8 @@ The claim was returned because documentation was reported as incomplete. We are 
 - Investigation and laboratory reports
 - Treating doctor's notes
 
-Sincerely,
-[Name], Revenue Cycle Team, Green Valley Hospital
+Sincerely,  
+[Name], Revenue Cycle Team, Green Valley Hospital  
 Policy / member reference: [to be filled]
 
 *Mode: template*
@@ -96,8 +96,8 @@ The claim was returned because documentation was reported as incomplete. We are 
 - Investigation and laboratory reports
 - Treating doctor's notes
 
-Sincerely,
-[Name], Revenue Cycle Team, Silverline Super Speciality Hospital
+Sincerely,  
+[Name], Revenue Cycle Team, Silverline Super Speciality Hospital  
 Policy / member reference: [to be filled]
 
 *Mode: template*
@@ -121,8 +121,8 @@ The claim was returned because documentation was reported as incomplete. We are 
 - Investigation and laboratory reports
 - Treating doctor's notes
 
-Sincerely,
-[Name], Revenue Cycle Team, Lotus Care Hospital
+Sincerely,  
+[Name], Revenue Cycle Team, Lotus Care Hospital  
 Policy / member reference: [to be filled]
 
 *Mode: template*

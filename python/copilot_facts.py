@@ -60,7 +60,7 @@ def get_strategies(engine=None):
 
 def get_alerts(n=9, engine=None):
     return pd.read_sql(
-        f"SELECT alert_rank, headline, detail, severity FROM report_alert ORDER BY alert_rank LIMIT {int(n)}",
+        f'SELECT alert_rank, "check", headline, detail, severity FROM report_alert ORDER BY alert_rank LIMIT {int(n)}',
         engine or get_engine(),
     )
 

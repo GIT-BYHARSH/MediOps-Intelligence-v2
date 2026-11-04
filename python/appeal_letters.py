@@ -68,7 +68,7 @@ def template_letter(c):
         f"The unpaid amount is {inr(c['recoverable_amount'])}.\n\n"
         f"{guide['paragraph']} We request re-review and payment of the unpaid amount.\n\n"
         f"**Enclosures:**\n{items}\n\n"
-        f"Sincerely,\n[Name], Revenue Cycle Team, {c['hospital_name']}\nPolicy / member reference: [to be filled]"
+        f"Sincerely,  \n[Name], Revenue Cycle Team, {c['hospital_name']}  \nPolicy / member reference: [to be filled]"
     )
 
 

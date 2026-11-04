@@ -154,12 +154,51 @@ def available_questions():
     return [title for _, title, _ in CANNED]
 
 
-def _ask_with_llm(question, engine):
+def _history_block(history):
+    """Last few questions and their SQL, so follow-ups like 'and in winter?' make sense."""
+    if not history:
+        return ""
+    lines = ["Earlier in this conversation (use it only to understand follow-up questions):"]
+    for q, sql in history[-3:]:
+        lines.append(f"Q: {q}")
+        if sql:
+            lines.append(f"SQL: {sql}")
+    return "\n".join(lines) + "\n\nNew question: "
+
+
+def chart_frame(df):
+    """Pick a simple chart for a result table. Returns (kind, frame) or None.
+    Labels are the text columns joined together; the value is the most relevant number column."""
+    if df is None or len(df) < 2 or len(df.columns) < 2:
+        return None
+    numeric = [c for c in df.columns if pd.api.types.is_numeric_dtype(df[c])]
+    labels = [c for c in df.columns if c not in numeric]
+    if not numeric:
+        return None
+    preferred = ["denial_rate", "rate", "expected_recovery", "gap", "days", "claims", "count"]
+    value = next((c for p in preferred for c in numeric if p in c.lower() and c.lower() != "priority_rank"), None)
+    if value is None:
+        value = numeric[-1]
+    if labels:
+        index = df[labels].astype(str).agg(" @ ".join, axis=1)
+        kind = "line" if any(k in labels[0].lower() for k in ("month", "date", "year")) else "bar"
+    else:
+        x_candidates = [c for c in numeric if c != value]
+        if not x_candidates:
+            return None
+        index = df[x_candidates[0]].astype(str)
+        kind = "line" if any(k in x_candidates[0].lower() for k in ("month", "date", "year")) else "bar"
+    frame = pd.DataFrame({value: df[value].astype(float).to_numpy()}, index=index.to_numpy())
+    return kind, frame
+
+
+def _ask_with_llm(question, engine, history=None):
     """Return a result dict, or None if the LLM path did not work (caller falls back)."""
     sql, df, problem = None, None, ""
+    context = _history_block(history)
     for _ in range(2):  # one retry, telling the model what went wrong
-        prompt = question if not problem else (
-            f"{question}\n\nYour previous query failed: {problem}\nWrite a corrected single SELECT statement.")
+        prompt = (context + question) if not problem else (
+            f"{context}{question}\n\nYour previous query failed: {problem}\nWrite a corrected single SELECT statement.")
         raw = ask_llm(SQL_SYSTEM, prompt, temperature=0, max_tokens=500)
         if raw is None:
             return None
@@ -184,11 +223,12 @@ def _ask_with_llm(question, engine):
             "answer": answer or "Result shown below (the explanation step was unavailable)."}
 
 
-def ask(question, engine=None):
-    """Answer a question. Returns dict: mode, sql, table, answer, unverified."""
+def ask(question, engine=None, history=None):
+    """Answer a question. history = list of (question, sql) from earlier turns.
+    Returns dict: mode, sql, table, answer, unverified."""
     engine = engine or get_engine()
     if llm_available():
-        result = _ask_with_llm(question, engine)
+        result = _ask_with_llm(question, engine, history)
         if result is not None:
             return result
     match = match_canned(question)

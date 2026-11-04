@@ -7,7 +7,7 @@
 **Priorities today**
 1. Work the claims list in priority order. Rank 1 is Silverline Super Speciality Hospital / Aegis Health Cover (Incomplete Documents), expected recovery Rs 2.14 lakh for 1 hour(s). Priority order is 9.0 times better than random order with the same 10,000 hours.
 2. Investigate the top alert: Unity General Insurance (settles in 60 days vs 20 typical). There are 9 high-severity alerts in total.
-3. Chase the 1389 claims pending over 90 days before they age further.
+3. Chase the 1,389 claims pending over 90 days before they age further.
 
 **Risk to watch:** average settlement time is 23.74 days overall, but one insurer is far slower (see the alerts), which ties up cash.
 

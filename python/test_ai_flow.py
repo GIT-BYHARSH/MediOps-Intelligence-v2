@@ -98,6 +98,62 @@ with mock.patch("daily_brief.ask_llm", return_value=None):
     brief, mode, unverified, facts = daily_brief.build_brief()
 check("Brief works with no LLM", mode == "template" and "Headline" in brief)
 
+# 8. Chat memory: earlier question and SQL are passed to the model for follow-ups
+seen_prompts = []
+
+
+def spy(system, user, **kwargs):
+    seen_prompts.append(user)
+    return "SELECT COUNT(*) AS n FROM report_claim" if len(seen_prompts) % 2 == 1 else "There are 305,835 claims."
+
+
+history = [("how many claims?", "SELECT COUNT(*) FROM report_claim")]
+with mock.patch("copilot.llm_available", return_value=True), mock.patch("copilot.ask_llm", side_effect=spy):
+    copilot.ask("and only the rejected ones?", engine, history=history)
+check("Follow-up question carries the earlier question and SQL",
+      "Earlier in this conversation" in seen_prompts[0] and "how many claims?" in seen_prompts[0]
+      and "and only the rejected ones?" in seen_prompts[0])
+
+# 9. Auto-chart picks sensible labels and values
+hot = copilot.run_query(copilot.CANNED[0][2], engine)
+kind, frame = copilot.chart_frame(hot)
+check("Chart for hotspots: bar chart, labels joined, rate column", kind == "bar" and "denial_rate_pct" in frame.columns
+      and "@" in str(frame.index[0]), f"{kind} {list(frame.columns)}")
+months = copilot.run_query(copilot.CANNED[5][2], engine)
+check("Chart for monthly denial rate is a line", copilot.chart_frame(months)[0] == "line")
+
+# 10. Alert investigator: facts come from the data; AI text is grounded-checked
+import investigate  # noqa: E402
+
+alerts = investigate.alert_table(engine)
+kinds = {investigate.parse_alert(r["check"], r["headline"])[0] for _, r in alerts.iterrows()}
+check("All 9 alerts can be parsed (5 types)", len(alerts) == 9 and kinds == {"pair", "department", "pending", "settlement", "month"}, str(kinds))
+pair_alert = alerts[alerts["headline"].str.contains("Coastal Care")].iloc[0]
+with mock.patch("investigate.ask_llm", return_value=None):
+    out = investigate.investigate(pair_alert["check"], pair_alert["headline"], engine)
+check("Investigation shows 28.6% and finds Incomplete Documents", any("28.6" in f for f in out["facts"])
+      and "Incomplete Documents" in " ".join(out["facts"]))
+with mock.patch("investigate.ask_llm", return_value="Denial is 28.6 percent and caused 777 extra rejections."):
+    out = investigate.investigate(pair_alert["check"], pair_alert["headline"], engine)
+check("Investigator flags an invented number from the AI", 777.0 in out["unverified"] and 28.6 not in out["unverified"],
+      str(out["unverified"]))
+pending_alert = alerts[alerts["check"].str.startswith("Pending")].iloc[0]
+with mock.patch("investigate.ask_llm", return_value=None):
+    out = investigate.investigate(pending_alert["check"], pending_alert["headline"], engine)
+check("Pending alert finds 1,389 claims and no other hospital", any("1,389" in f for f in out["facts"])
+      and any("0 claims pending" in f for f in out["facts"]))
+
+# 11. What-if simulator reproduces the base case
+import whatif  # noqa: E402
+
+sim = whatif.simulate(whatif.load_claims(engine), 10_000, 1.0, 1.0)
+rec = dict(zip(sim["strategy"], sim["recovery_cr"]))
+check("What-if base case matches the SQL simulation (21.87 / 16.68 / 14.00)",
+      abs(rec["Priority score"] - 21.87) < 0.01 and abs(rec["Largest amount first"] - 16.68) < 0.01
+      and abs(rec["Quickest first"] - 14.00) < 0.01, str(rec))
+sim_more = whatif.simulate(whatif.load_claims(engine), 20_000, 1.0, 1.0)
+check("More hours recover more", sim_more["recovery_cr"].iloc[0] > sim["recovery_cr"].iloc[0])
+
 passed = sum(results)
 print(f"\n{passed} of {len(results)} AI flow tests passed")
 raise SystemExit(0 if passed == len(results) else 1)

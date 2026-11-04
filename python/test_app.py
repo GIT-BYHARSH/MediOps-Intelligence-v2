@@ -7,27 +7,38 @@ from streamlit.testing.v1 import AppTest
 
 APP = str(Path(__file__).resolve().parent / "app.py")
 
-at = AppTest.from_file(APP, default_timeout=120).run()
-assert not at.exception, f"App crashed on load: {at.exception}"
-print("PASS: app loads, KPI row shows", [m.label for m in at.metric])
 
-buttons = {b.label: b for b in at.button}
-buttons["Generate today's brief"].click()
-at.run()
-assert not at.exception, f"Brief crashed: {at.exception}"
+def click(at, label):
+    at.button[[b.label for b in at.button].index(label)].click()
+    at.run()
+    assert not at.exception, f"'{label}' crashed: {at.exception}"
+
+
+at = AppTest.from_file(APP, default_timeout=180).run()
+assert not at.exception, f"App crashed on load: {at.exception}"
+assert len(at.tabs) == 5, f"Expected 5 tabs, got {len(at.tabs)}"
+print("PASS: app loads with 5 tabs and KPI row", [m.label for m in at.metric][:5])
+
+click(at, "Generate today's brief")
 assert any("Headline" in m.value for m in at.markdown), "Brief text missing"
 print("PASS: daily brief generates")
 
-at.button[[b.label for b in at.button].index("Draft letters")].click()
-at.run()
-assert not at.exception, f"Letters crashed: {at.exception}"
-print("PASS: appeal letters generate")
+at.chat_input[0].set_value("show denial hotspots").run()
+assert not at.exception, f"Chat crashed: {at.exception}"
+assert len(at.session_state.chat) == 2, "Chat did not record the turn"
+assert not at.session_state.chat[1]["table"].empty, "Chat gave no table"
+at.chat_input[0].set_value("which insurer is slowest to settle?").run()
+assert len(at.session_state.chat) == 4, "Follow-up turn not recorded"
+print("PASS: chat answers two questions and keeps history")
 
-at.selectbox[0].select("Automatic alerts")
-at.run()
-at.button[[b.label for b in at.button].index("Ask")].click()
-at.run()
-assert not at.exception, f"Ask tab crashed: {at.exception}"
-assert len(at.dataframe) >= 1, "No result table"
-print("PASS: ask-the-data tab answers a built-in question")
-print("4 of 4 app tests passed")
+click(at, "Investigate")
+assert any("Evidence" in m.value for m in at.markdown), "Investigation evidence missing"
+print("PASS: alert investigator runs")
+
+at.slider[[s.label for s in at.slider].index("Team hours available")].set_value(5000).run()
+assert not at.exception, f"What-if crashed: {at.exception}"
+print("PASS: what-if simulator responds to a slider")
+
+click(at, "Draft letters")
+print("PASS: appeal letters generate")
+print("6 of 6 app tests passed")

@@ -16,25 +16,47 @@ import requests
 import db  # noqa: F401  (importing db loads the .env file)
 
 
+_PLACEHOLDERS = {"", "key", "model", "model_name", "base_url"}
+
+
+def _value(name):
+    """A setting from .env, or '' if it is empty or still placeholder text from .env.example."""
+    value = os.environ.get(name, "").strip()
+    lowered = value.lower()
+    if lowered in _PLACEHOLDERS or lowered.startswith(("paste_", "your_", "the_")):
+        return ""
+    return value
+
+
+def config_problem():
+    """Plain-English reason the LLM cannot be used, or None if the settings look usable."""
+    if not _value("LLM_API_KEY") or not _value("LLM_MODEL"):
+        return "LLM_API_KEY and LLM_MODEL are empty or still placeholder text in .env."
+    raw_base = os.environ.get("LLM_BASE_URL", "").strip()
+    if raw_base and not raw_base.startswith(("http://", "https://")):
+        return "LLM_BASE_URL in .env must start with https://"
+    return None
+
+
 def llm_available():
-    return bool(os.environ.get("LLM_API_KEY") and os.environ.get("LLM_MODEL"))
+    return config_problem() is None
 
 
 def model_label():
-    return os.environ.get("LLM_MODEL", "") if llm_available() else "template mode (no LLM key)"
+    return _value("LLM_MODEL") if llm_available() else "template mode (no LLM key)"
 
 
 def ask_llm(system, user, temperature=0.2, max_tokens=900):
     """Return the model's text answer, or None when no key is set or the call fails."""
     if not llm_available():
         return None
-    base = os.environ.get("LLM_BASE_URL", "https://api.openai.com/v1").rstrip("/")
+    base = (os.environ.get("LLM_BASE_URL", "").strip() or "https://api.openai.com/v1").rstrip("/")
     try:
         response = requests.post(
             f"{base}/chat/completions",
-            headers={"Authorization": f"Bearer {os.environ['LLM_API_KEY']}"},
+            headers={"Authorization": f"Bearer {_value('LLM_API_KEY')}"},
             json={
-                "model": os.environ["LLM_MODEL"],
+                "model": _value("LLM_MODEL"),
                 "messages": [
                     {"role": "system", "content": system},
                     {"role": "user", "content": user},
