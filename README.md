@@ -2,7 +2,13 @@
 
 **Hospitals do the work but don't always get paid. MediOps finds the unpaid money and tells the finance team which claims to chase first.**
 
-An end-to-end analytics project: simulated data generation, PostgreSQL, SQL analysis, Python (ML, forecasting, anomaly alerts) and a 4-page Power BI dashboard.
+**At a glance**
+- **Problem:** a hospital network has thousands of denied, part-paid or stuck insurance claims and limited staff time. Which should it chase first?
+- **What I built:** a PostgreSQL star schema (305,835 claims) with SQL analysis, a recovery priority score, forecasting, anomaly alerts, a 4-page Power BI dashboard, an Excel finance pack and a safety-tested AI assistant.
+- **Result:** working claims in priority order recovers about **9x more** than random order with the same staff hours, and **5.5x to 15.4x** across 500 stress-tested assumption sets ([sensitivity report](docs/sensitivity_report.md)).
+- **Recommendations:** six sized actions with owners and KPIs, in the [action plan](docs/action_plan.md).
+- **Skills shown:** SQL (CTEs, window functions), Power BI and DAX, Excel (formulas, charts, editable assumptions), Python (pandas, scikit-learn), KPI design, data quality checks, backtested forecasting, anomaly detection, testing, and honest reporting of limits.
+- **Deliverables:** [dashboard screenshots](#dashboard-power-bi-4-pages), [Excel finance pack](docs/MediOps_Finance_Pack.xlsx), [AI assistant demo](#mediops-copilot-ai-layer), [learning log](docs/learning_log.md).
 
 > **Data note:** all data is **simulated** (25 fictional hospitals, 8 fictional insurers, 100,000 patients with no names). Real claims data is confidential. Known problems were planted on purpose so the analysis could be tested: if the pipeline finds them, the method works. Results describe this simulation, not real hospitals or insurers.
 
@@ -24,6 +30,20 @@ The top 10% of claims by priority hold 64% of the expected recovery for 6% of th
 > **Assumptions:** win chances (Incomplete Documents 70%, Coding Error 60%, Medical Necessity 35%) and effort hours (1 / 2 / 5) are **assumed, not measured**. See "Limitations".
 
 ![Recovery strategies](assets/charts/03_recovery_strategies.png)
+
+## What the finance team should do
+Full table with evidence, owner and KPI: [docs/action_plan.md](docs/action_plan.md). The actions overlap, so the values are not additive.
+
+| # | Action | Money at stake (simulated) |
+|---|---|---|
+| 1 | Fix document preparation for Aegis at Coastal Care and Banyan Tree, resubmit 1,406 claims | Recoverable Rs 2.22 Cr |
+| 2 | Audit coding in Meridian Cardiology (22.8% denial vs 11.2% elsewhere in the hospital) | Recoverable Rs 58 lakh |
+| 3 | Clear the Lakeview General backlog of 1,389 claims older than 90 days | Rs 77 lakh stuck |
+| 4 | Escalate Unity General's payment time (59.9 days vs 19.9) | About Rs 1.70 Cr of extra cash tied up |
+| 5 | Staff up for December and January (14.5% denial vs 10.3%) | About Rs 2.72 Cr claimed on extra rejections over 2 years |
+| 6 | Add a pre-submission check for surgery (7% of claims, 75% of the claim gap) | Recoverable Rs 48.25 Cr |
+
+The Excel version, with editable assumptions and live formulas, is in [docs/MediOps_Finance_Pack.xlsx](docs/MediOps_Finance_Pack.xlsx).
 
 ## Key numbers (simulated data)
 | KPI | Value |
@@ -64,6 +84,7 @@ SQL found all 7 planted problems without being told where to look:
 | Forecast | Jan-Mar 2026 volume and denial rate, backtested | `python/forecast.py` |
 | Alerts | Robust z-score anomaly detection, 9 alerts, none false | `python/anomaly_alerts.py` |
 | Dashboard | 4-page Power BI report | `powerbi/` |
+| Actions and Excel | Sized action plan; Excel pack with live formulas and editable assumptions | `python/action_plan.py`, `python/export_excel_pack.py` |
 
 SQL skills used: CTEs, window functions (`RANK`, `NTILE`, running totals), `FILTER`, joins across fact and dimension tables, date arithmetic.
 
@@ -112,6 +133,9 @@ Sample outputs: [daily brief](docs/sample_outputs/daily_brief.md), [appeal lette
 **Ask the data** (chart and table are built automatically; the SQL is always shown)
 ![Ask the data](assets/app/ask_the_data.png)
 
+**Safety demo** (a request to delete data is refused; the AI can only run read-only queries on approved views)
+![Safety refusal](assets/app/safety_refusal.png)
+
 **Alert investigator** (evidence from drill-down queries, then a likely cause to verify)
 ![Alert investigator](assets/app/investigate_alerts.png)
 
@@ -143,6 +167,8 @@ Sample outputs: [daily brief](docs/sample_outputs/daily_brief.md), [appeal lette
 7. Optional AI layer: `streamlit run python/app.py`.
 
 ## Project documents
+- [Action plan](docs/action_plan.md) and [Excel finance pack](docs/MediOps_Finance_Pack.xlsx)
+- [Sensitivity report](docs/sensitivity_report.md)
 - [Problem statement](docs/problem_statement.md)
 - [KPI dictionary](docs/kpi_dictionary.md)
 - [Data model](docs/data_model.md)

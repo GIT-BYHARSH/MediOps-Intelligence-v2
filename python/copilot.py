@@ -16,7 +16,7 @@ import pandas as pd
 from sqlalchemy import text
 
 from db import get_engine
-from llm import ask_llm, llm_available, model_label, unverified_numbers
+from llm import ask_llm, busy_message, last_failure, llm_available, model_label, unverified_numbers
 from sql_guard import add_row_limit, validate_sql
 
 SCHEMA = """
@@ -62,6 +62,8 @@ SQL_SYSTEM = (
 SUMMARY_SYSTEM = (
     "You explain query results to a hospital finance manager. Use ONLY the numbers in the result table; never "
     "invent or estimate a number. Answer in at most 4 sentences. Say if the result is empty. "
+    "Name each measure exactly as its column name says (for example 'pending claims' vs 'all claims'), so the "
+    "reader knows how it was calculated. "
     "The data is simulated; do not name real hospitals or insurers as real."
 )
 
@@ -234,6 +236,9 @@ def ask(question, engine=None, history=None):
     match = match_canned(question)
     if match is None:
         options = "\n".join(f"- {t}" for t in available_questions())
+        if llm_available() and last_failure["reason"]:  # a key exists, the service just did not answer
+            return {"mode": "template", "sql": None, "table": pd.DataFrame(), "unverified": [],
+                    "answer": busy_message() + "\n\nMeanwhile I can answer these without the AI:\n" + options}
         return {"mode": "template", "sql": None, "table": pd.DataFrame(), "unverified": [],
                 "answer": ("I can answer these topics without an LLM key:\n" + options +
                            "\n\nAdd LLM_API_KEY and LLM_MODEL to .env to ask any question.")}

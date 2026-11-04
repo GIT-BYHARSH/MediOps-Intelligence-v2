@@ -10,6 +10,7 @@ so the project always runs. The key is never printed or logged.
 """
 import os
 import re
+import time
 
 import requests
 
@@ -46,31 +47,63 @@ def model_label():
     return _value("LLM_MODEL") if llm_available() else "template mode (no LLM key)"
 
 
+last_failure = {"reason": None}  # why the latest call failed (e.g. "HTTP 429"), for friendly messages
+
+
+def busy_message():
+    """Plain-English note for the user when the AI service could not be reached."""
+    reason = last_failure["reason"] or "unknown error"
+    if reason == "HTTP 429":
+        why = "the free plan's request limit was reached (it resets within a minute)"
+    elif reason in ("HTTP 500", "HTTP 502", "HTTP 503", "HTTP 504"):
+        why = "Google's AI servers are busy right now"
+    else:
+        why = f"the call failed ({reason})"
+    return f"The AI service could not answer because {why}. Please try again in a minute."
+
+
 def ask_llm(system, user, temperature=0.2, max_tokens=900):
     """Return the model's text answer, or None when no key is set or the call fails."""
+    last_failure["reason"] = None
     if not llm_available():
         return None
     base = (os.environ.get("LLM_BASE_URL", "").strip() or "https://api.openai.com/v1").rstrip("/")
     try:
-        response = requests.post(
-            f"{base}/chat/completions",
-            headers={"Authorization": f"Bearer {_value('LLM_API_KEY')}"},
-            json={
-                "model": _value("LLM_MODEL"),
-                "messages": [
-                    {"role": "system", "content": system},
-                    {"role": "user", "content": user},
-                ],
-                "temperature": temperature,
-                "max_tokens": max_tokens,
-            },
-            timeout=60,
-        )
+        body = {
+            "model": _value("LLM_MODEL"),
+            "messages": [
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ],
+            "temperature": temperature,
+            # "thinking" models spend part of this budget on hidden reasoning,
+            # so keep it generous or the visible answer comes back empty.
+            "max_tokens": max(max_tokens, 4000),
+        }
+        effort = os.environ.get("LLM_REASONING_EFFORT", "").strip()
+        if effort:  # optional, e.g. "low" for Gemini 3 models (faster, cheaper)
+            body["reasoning_effort"] = effort
+        for attempt in range(3):  # busy servers (503) usually clear in seconds
+            response = requests.post(
+                f"{base}/chat/completions",
+                headers={"Authorization": f"Bearer {_value('LLM_API_KEY')}"},
+                json=body,
+                timeout=90,
+            )
+            # retry only busy-server errors; retrying a 429 would burn more of the limited quota
+            if response.status_code not in (500, 502, 503, 504) or attempt == 2:
+                break
+            time.sleep(4 * (attempt + 1))
         response.raise_for_status()
-        return response.json()["choices"][0]["message"]["content"].strip()
+        text = (response.json()["choices"][0]["message"].get("content") or "").strip()
+        if not text:
+            print("[LLM returned an empty answer. Using template mode instead.]")
+            return None
+        return text
     except Exception as error:  # never show the request (it contains the key)
         status = getattr(getattr(error, "response", None), "status_code", None)
         detail = f"HTTP {status}" if status else type(error).__name__
+        last_failure["reason"] = detail
         print(f"[LLM call failed: {detail}. Using template mode instead.]")
         return None
 

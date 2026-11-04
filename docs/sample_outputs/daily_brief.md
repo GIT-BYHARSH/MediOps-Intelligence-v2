@@ -2,17 +2,19 @@
 
 > Simulated data. AI-written briefs must be reviewed by a person before use.
 
-**Headline:** Rs 95.57 crore was claimed but not paid, and Rs 61.06 crore of it is recoverable. Denial rate is 11.1 percent (simulated data).
+**Headline**
+This daily recovery brief reviews simulated claims data as of 31 Dec 2025, where expected recovery stands at Rs 31.27 crore.
 
-**Priorities today**
-1. Work the claims list in priority order. Rank 1 is Silverline Super Speciality Hospital / Aegis Health Cover (Incomplete Documents), expected recovery Rs 2.14 lakh for 1 hour(s). Priority order is 9.0 times better than random order with the same 10,000 hours.
-2. Investigate the top alert: Unity General Insurance (settles in 60 days vs 20 typical). There are 9 high-severity alerts in total.
-3. Chase the 1,389 claims pending over 90 days before they age further.
+**Three Priorities for Today**
+1. **Chase highest-return claims first:** Focus on top incomplete document claims, starting with Silverline Super Speciality Hospital / Aegis Health Cover (expected recovery Rs 2.14 lakh, 1 hour effort), Lotus Care Hospital / Trustwell Health Insurance (Rs 2.05 lakh), and Green Valley Hospital / Aegis Health Cover (Rs 2.03 lakh).
+2. **Investigate critical operational alerts:** Resolve Lakeview General Hospital's 1,389 claims stuck over 90 days, Unity General Insurance settling in 60 days versus 20 typical, and Aegis Health Cover at Coastal Care Hospital showing a 28.6% denial rate (+307 rejections).
+3. **Target high-denial provider entities:** Investigate Aegis Health Cover at Banyan Tree Hospital (28.4% denial, +374 rejections) and Meridian Heart and Research Centre - Cardiology (22.8% denial, +124 rejections).
 
-**Risk to watch:** average settlement time is 23.74 days overall, but one insurer is far slower (see the alerts), which ties up cash.
+**One Risk to Watch**
+A major denial spike occurred in 2025-12, reaching a 15.2% denial rate compared to the typical 10.4%.
 
 ---
-**Mode:** template  
+**Mode:** LLM (gemini-3.5-flash)  
 **Grounding check:** all numbers found in the facts
 
 <details><summary>Facts given to the writer</summary>

@@ -61,7 +61,13 @@ check("Correct number in the explanation is not flagged", r["unverified"] == [],
 with mock.patch("copilot.llm_available", return_value=True), mock.patch("copilot.ask_llm", return_value=None):
     r = copilot.ask("which insurer is slowest to settle?", engine)
 check("Falls back to built-in question when the LLM fails", r["mode"] == "template" and not r["table"].empty)
-r = copilot.ask("what is the meaning of life", engine)
+with mock.patch("copilot.llm_available", return_value=True), mock.patch("copilot.ask_llm", return_value=None), \
+        mock.patch.dict("copilot.last_failure", {"reason": "HTTP 429"}):
+    r = copilot.ask("what is the meaning of life", engine)
+check("Rate-limited AI gives a 'try again' message, not 'add a key'",
+      "try again" in r["answer"] and "Add LLM_API_KEY" not in r["answer"], r["answer"][:80])
+with mock.patch("copilot.llm_available", return_value=False):
+    r = copilot.ask("what is the meaning of life", engine)
 check("Unknown question without LLM lists what it can answer", "without an LLM key" in r["answer"])
 
 # 5. Layer 5: the database itself refuses writes in a read-only transaction

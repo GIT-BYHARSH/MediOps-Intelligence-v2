@@ -164,3 +164,28 @@ Short notes after each step: what I built and why. Used later for the report, vi
 - Lesson from testing: the data-driven check showed that December 2025 looks like it has an insurer-specific spike (13.7 to 20.2 percent) but only has 3,201 decided claims because many are still pending. The explanation now says this is probably noise. Always check sample size before blaming a group.
 - What-if simulator: sliders for team hours, win chance multiplier, effort multiplier and staff cost per hour (a user input, not a measured value). Reproduces the SQL simulation (21.87 / 16.68 / 14.00 crore). More hours shrink the advantage of the priority score, which matches the sensitivity analysis.
 - Tests: 59 in total (30 SQL guard, 23 flow, 6 app). A fake model is used, so no API key or cost is needed. Not yet tested against a real model.
+
+## Step 21: Action plan and Excel finance pack (python/action_plan.py, python/export_excel_pack.py)
+- Why: a review as a hiring panel at a large firm would do it found three gaps. The project found problems but did not say what to do, how much it is worth, who owns it and which KPI to track. It had no Excel deliverable, although Excel is the first skill on most analytics job descriptions. And the README was too long for a recruiter who reads the top 20 lines.
+- Action plan: six actions, each with evidence, money at stake, effort, owner and KPI, all computed from the database. Values are labelled expected when they depend on the assumed win chances. The actions overlap, so they are not added up. Unity's slow payment is sized as cash tied up using receivables = daily claim flow x extra days waiting (a standard working-capital idea), not as lost revenue.
+- Judgement call: surgery is worth about 20 times more than the Aegis fix (Rs 48.25 crore recoverable against Rs 2.22 crore), but the Aegis fix is a quick win. The plan says so instead of ranking by value alone.
+- Excel pack (docs/MediOps_Finance_Pack.xlsx): Summary with a native chart, a top-100 worklist with INDEX/MATCH formulas that read editable assumptions (blue text on yellow), SUBTOTAL totals that respect filters, data bars, Alerts, and a Forecast chart. Verified by opening the file in Excel through automation: 0 formula errors, and changing a win chance recalculated the worklist (row 1: 70% gives Rs 2,14,369, 50% gives Rs 1,53,121).
+- README rewritten at the top with an At a glance block (problem, what I built, result, recommendations, skills, deliverables).
+
+## Step 22: Real AI connected (Google Gemini)
+
+What I did
+- Connected the Copilot to a real LLM (Gemini through its OpenAI-compatible endpoint). The key lives only in .env, which is git-ignored and hidden from the editor with .cursorignore.
+- Ran the daily brief, Ask the data, the alert investigator and the safety demo with the real model. All numbers still came from the database; the grounding check passed.
+- A request to delete data was refused by the SQL guard (the model never gets to change anything).
+
+Problems I hit and fixed
+- Model gemini-2.5-flash was retired for new keys (HTTP 404). Listed the models my key can use and switched to a current one.
+- The newer model spends tokens on hidden "thinking", which returned empty answers. Raised the token budget and handle empty answers.
+- HTTP 503 (busy servers): the app now retries up to 3 times.
+- HTTP 429: the free plan allows about 20 requests per day per model. The app now says "AI is busy, try again" instead of "add a key", and does not retry a 429 (that would burn more quota). Switched to gemini-3.5-flash-lite, which still had quota.
+- An old test assumed no key was set; it now ignores the real .env.
+
+What I learned
+- Free LLM plans have small daily limits, so the app must fail politely and keep a template fallback.
+- Showing the SQL the AI ran lets a reader see which definition of a number was used (for example pending claims vs average extra cash tied up).
