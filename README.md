@@ -73,7 +73,17 @@ SQL skills used: CTEs, window functions (`RANK`, `NTILE`, running totals), `FILT
 3. **Recovery Worklist:** priority vs random curve and the top 10 claims to chase
 4. **Outlook & Alerts:** forecast and all 9 alerts
 
-<!-- TODO: add real Power BI screenshots here, for example assets/dashboard/page1.png -->
+**1. Command Center**
+![Command Center](assets/dashboard/page1_command_center.png)
+
+**2. Where Money Is Lost** (the red cells are Aegis at Banyan Tree and Coastal Care)
+![Where Money Is Lost](assets/dashboard/page2_where_money_is_lost.png)
+
+**3. Recovery Worklist** (priority order vs random order, and the first 10 claims to chase)
+![Recovery Worklist](assets/dashboard/page3_recovery_worklist.png)
+
+**4. Outlook & Alerts** (forecast for Jan-Mar 2026 and the 9 automatic alerts)
+![Outlook and Alerts](assets/dashboard/page4_outlook_alerts.png)
 
 ## Honest notes on the machine learning
 - Inputs known only after a decision (approved amount, rejection reason, settlement date) are never used (no leakage).
@@ -83,7 +93,7 @@ SQL skills used: CTEs, window functions (`RANK`, `NTILE`, running totals), `FILT
 
 ## Limitations
 - Simulated data: patterns were planted, so "finding" them tests the method, not the real world.
-- Win chances and effort hours are assumptions. A sensitivity test across a range of values is planned.
+- Win chances and effort hours are assumptions. A sensitivity test (500 random assumption sets plus named stress scenarios) is in [docs/sensitivity_report.md](docs/sensitivity_report.md): the priority score was 5.5x to 15.4x better than random order (median about 10x) when the team knows the true values. When the team ranked with our base values and reality differed, it was still at least 5.4x better in all 500 random scenarios (best strategy in 458 of 500), and 3.0x in the worst named case (assumptions fully reversed). The advantage shrinks when staff time is plentiful.
 - Forecast error is very low (0.8% on claim volume) partly because simulated seasonality repeats exactly. Treat it as a best case.
 - Only 24 months of history.
 
