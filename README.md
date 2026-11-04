@@ -85,6 +85,25 @@ SQL skills used: CTEs, window functions (`RANK`, `NTILE`, running totals), `FILT
 **4. Outlook & Alerts** (forecast for Jan-Mar 2026 and the 9 automatic alerts)
 ![Outlook and Alerts](assets/dashboard/page4_outlook_alerts.png)
 
+## MediOps Copilot (AI layer)
+A small assistant on top of the same database. The rule is simple: **numbers come from the database, the language model only writes and explains.**
+
+| Feature | What it does | Run |
+|---|---|---|
+| Daily recovery brief | Short brief for the finance head from live KPIs, alerts and top claims | `python python/daily_brief.py` |
+| Appeal letter drafter | Drafts re-review letters for the top-priority claims, with a checklist of enclosures | `python python/appeal_letters.py 5` |
+| Ask the data | Plain-English question, answered with SQL the user can see | `python python/copilot.py "which insurer is slowest?"` |
+| Demo app | All three in one page | `streamlit run python/app.py` |
+
+Guardrails (tested in `python/test_sql_guard.py`, `python/test_ai_flow.py` and `python/test_app.py`, 48 tests, no API key needed; the language model is replaced by a fake one that tries attacks and invents numbers):
+- AI-written SQL must be a single SELECT, may only use allow-listed reporting views (raw fact tables and the patient table are blocked), and is wrapped with a row limit.
+- It runs inside a read-only database transaction with a time limit, so even a query that slipped through could not change data.
+- Every number in AI-written text is checked against the source facts. A brief is flagged, and a letter with an invented number is replaced by the template.
+- Letters never include internal estimates (win chance, expected recovery) and use placeholders for anything unknown. They are drafts for a person to review.
+- Works with no API key (templates plus a built-in question list). With a key, any OpenAI-compatible provider works; see `.env.example`. The key stays in the private `.env` file.
+
+Sample outputs: [daily brief](docs/sample_outputs/daily_brief.md), [appeal letters](docs/sample_outputs/appeal_letters.md).
+
 ## Honest notes on the machine learning
 - Inputs known only after a decision (approved amount, rejection reason, settlement date) are never used (no leakage).
 - Train and test are split by time: train before 1 Jul 2025, test after.
@@ -98,12 +117,13 @@ SQL skills used: CTEs, window functions (`RANK`, `NTILE`, running totals), `FILT
 - Only 24 months of history.
 
 ## How to run
-1. Create the Python environment and install: pandas, SQLAlchemy, python-dotenv, matplotlib, scikit-learn, psycopg2.
-2. Create a PostgreSQL database `mediops` and a private `.env` file with your database credentials (never commit `.env`).
+1. Create a Python 3.12 environment and run `pip install -r requirements.txt`.
+2. Create a PostgreSQL database `mediops` and a private `.env` file (copy `.env.example`) with your database credentials (never commit `.env`). The LLM settings in it are optional.
 3. Run the generators in this order: hospitals, departments, insurers, patients, visits, bills, claims (`python/generate_*.py`).
 4. In PostgreSQL run `sql/schema.sql`, `sql/load_data.sql`, then `sql/reporting_layer.sql`.
 5. Run `python/data_quality_checks.py`, then the analysis scripts as needed.
-6. Run `python/export_dashboard_tables.py`, then connect Power BI to the `report_*` tables.
+6. Run `python/anomaly_alerts.py` and `python/export_dashboard_tables.py`, then connect Power BI to the `report_*` tables.
+7. Optional AI layer: `streamlit run python/app.py`.
 
 ## Project documents
 - [Problem statement](docs/problem_statement.md)

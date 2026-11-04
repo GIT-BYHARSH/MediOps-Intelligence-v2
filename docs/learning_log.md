@@ -148,3 +148,12 @@ Short notes after each step: what I built and why. Used later for the report, vi
 - Honest limits: with wrong assumptions another strategy sometimes did slightly better (42 of 500). The advantage shrinks with more staff time (3.0x at 40,000 hours). Only win chance and effort were varied, not the claim population.
 - Lesson: report a headline as a range with a median, not one number. Test the assumption you are least sure about.
 - Output: docs/sensitivity_report.md, assets/charts/07_sensitivity.png.
+
+## Step 19: MediOps Copilot, the AI layer (python/llm.py, copilot.py, daily_brief.py, appeal_letters.py, app.py)
+- Built: a daily recovery brief, an appeal letter drafter and an "ask the data" copilot, plus a Streamlit demo app. They run with or without an LLM key (templates and a built-in question list are the fallback), and work with any OpenAI-compatible provider.
+- Design rule: numbers come from the database, the language model only writes and explains. A language model must never be the source of a number.
+- Guardrails for AI-written SQL (sql_guard.py): one SELECT only, no comments, forbidden keywords blocked, only allow-listed reporting views (raw fact tables and dim_patient blocked), row limit wrapper, then the query runs in a READ ONLY transaction with a 15 second time limit. Layers matter because any single check can be bypassed.
+- Grounding check (llm.py): numbers in AI text must appear in the source facts. A brief with an unknown number is flagged; a letter with one is replaced by the template. Internal estimates (win chance, expected recovery) are never shown to the letter writer because they must not appear in a letter to an insurer.
+- Testing without an API key: a fake model returns attacks (DROP TABLE, stacked statements, blocked tables) and invented numbers. 30 guard tests and 14 flow tests pass. The database row count is unchanged after the attack test. Not yet tested against a real LLM (needs a key).
+- Honest limits: the copilot only knows the views in its schema description; the allow-list guard is regex-based (the read-only transaction is the real backstop); AI text can still be wrong in wording even when its numbers are right, so letters and briefs are drafts for a person to review.
+- Files: .env.example (placeholders only), requirements.txt, docs/sample_outputs/.
