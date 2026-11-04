@@ -140,3 +140,11 @@ Short notes after each step: what I built and why. Used later for the report, vi
 - Built: Recovery by strategy column chart (Priority score 21.87 Cr vs Random 2.44 Cr, about 9x) and the Alerts panel on page 1.
 - Lesson: a first version of the alerts panel used a filter 'bottom 5 by alert_rank' plus a sort, which took many steps. It is simpler to prepare the data so that a plain table is already correct (numbered text, top 5 only). Do the shaping in the data, not in the visual.
 - Lesson: a visual that shows only its title is just too small to draw; check size before suspecting the fields.
+
+## Step 18: Sensitivity analysis (python/sensitivity_analysis.py)
+- Why: the "9x better than random" headline rests on assumed win chances and effort hours. An interviewer can fairly ask what happens if they are wrong.
+- Method: re-run the 10,000-hour simulation in Python (base case matches SQL: 21.87 / 16.68 / 14.00 Cr). Two modes: "team knows" the true values, and "team assumes" our base values while reality differs (the harder test). Tested 8 named stress scenarios, 5 time budgets and 500 random assumption sets.
+- Result: priority score was 5.5x to 15.4x better than random (median about 10x) when the team knows the values, and at least 5.4x better in all 500 random scenarios when the team uses wrong base values (best strategy in 458 of 500). Worst named case, assumptions fully reversed: 3.0x. It never fell below random.
+- Honest limits: with wrong assumptions another strategy sometimes did slightly better (42 of 500). The advantage shrinks with more staff time (3.0x at 40,000 hours). Only win chance and effort were varied, not the claim population.
+- Lesson: report a headline as a range with a median, not one number. Test the assumption you are least sure about.
+- Output: docs/sensitivity_report.md, assets/charts/07_sensitivity.png.
