@@ -2,6 +2,9 @@
 
 **Hospitals do the work but don't always get paid. MediOps finds the unpaid money and tells the finance team which claims to chase first.**
 
+### [Try the live demo: MediOps Copilot](https://mediops-copilot.streamlit.app/)
+No install needed. The first load can take about 30 seconds because the free host puts the app to sleep when nobody is using it. Everything works without an AI key; to ask your own free-form questions, paste your own free Gemini key in the sidebar (it is used only for your session and never stored).
+
 **At a glance**
 - **Problem:** a hospital network has thousands of denied, part-paid or stuck insurance claims and limited staff time. Which should it chase first?
 - **What I built:** a PostgreSQL star schema (305,835 claims) with SQL analysis, a recovery priority score, forecasting, anomaly alerts, a 4-page Power BI dashboard, an Excel finance pack and a safety-tested AI assistant.
@@ -116,9 +119,11 @@ A small assistant on top of the same database. The rule is simple: **numbers com
 | Ask the data (chat) | Plain-English questions with follow-ups, an automatic chart and the SQL shown | `python python/copilot.py "which insurer is slowest?"` |
 | Alert investigator | Pick an alert; the app runs drill-down queries and explains the likely cause (as a hypothesis) and a next action | in the app |
 | What-if simulator | Sliders for team hours, win chance, effort and staff cost; recovery by strategy updates live | in the app |
-| Demo app | All of the above in one page | `streamlit run python/app.py` |
+| Demo app | All of the above in one page | [live demo](https://mediops-copilot.streamlit.app/) or `streamlit run python/app.py` |
 
-Guardrails (tested in `python/test_sql_guard.py`, `python/test_ai_flow.py` and `python/test_app.py`, 59 tests, no API key needed; the language model is replaced by a fake one that tries attacks and invents numbers):
+Deployment: the live demo runs on Streamlit Community Cloud with the report-level tables in a free Neon PostgreSQL database, accessed by a **read-only user**. The raw patient-level tables are not uploaded, and the owner's AI key is not in the cloud (visitors can bring their own). See [docs/deploy.md](docs/deploy.md).
+
+Guardrails (tested in `python/test_sql_guard.py`, `python/test_ai_flow.py` and `python/test_app.py`, 67 tests, no API key needed; the language model is replaced by a fake one that tries attacks and invents numbers):
 - AI-written SQL must be a single SELECT, may only use allow-listed reporting views (raw fact tables and the patient table are blocked), and is wrapped with a row limit.
 - It runs inside a read-only database transaction with a time limit, so even a query that slipped through could not change data.
 - Every number in AI-written text is checked against the source facts. A brief is flagged, and a letter with an invented number is replaced by the template.

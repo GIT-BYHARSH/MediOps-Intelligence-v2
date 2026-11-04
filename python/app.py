@@ -87,8 +87,8 @@ with st.sidebar:
     st.subheader("Mode")
     st.write(f"**{model_label()}**")
     if not llm_available():
-        st.info("Templates and the built-in question list are in use. Paste your own free Gemini key above "
-                "(or set LLM_API_KEY and LLM_MODEL in .env) to turn on free-form AI.")
+        st.info("The built-in questions, briefs and letters work without AI. To ask your own free-form "
+                "questions, paste your own free Gemini key in the box above.")
     st.subheader("Safety")
     st.markdown("- AI-written SQL: SELECT only, approved views only, row limit\n"
                 "- Runs in a read-only transaction\n"
