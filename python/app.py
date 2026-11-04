@@ -16,7 +16,7 @@ import whatif  # noqa: E402
 from copilot_facts import get_kpis, get_top_claims  # noqa: E402
 import altair as alt  # noqa: E402
 
-from llm import config_problem, llm_available, model_label  # noqa: E402
+from llm import llm_available, model_label, set_session_credentials  # noqa: E402
 
 st.set_page_config(page_title="MediOps Copilot", layout="wide")
 
@@ -73,11 +73,22 @@ st.caption("AI assistant for the revenue-recovery team. All data is simulated (f
            "Numbers come from the database; the AI only writes and explains.")
 
 with st.sidebar:
+    set_session_credentials(None)  # every page run starts from the owner's settings (.env or cloud secrets)
+    if not llm_available():
+        # Visitors can try the free-form AI with their own free key. It lives only in this visitor's
+        # session (never in the shared environment, never stored or logged).
+        with st.expander("Use your own free Gemini key (optional)"):
+            st.caption("Get a free key at https://aistudio.google.com/apikey . It is used only for your "
+                       "session and is never stored.")
+            own_key = st.text_input("Gemini API key", type="password", key="own_key")
+            own_model = st.text_input("Model", value="gemini-3.5-flash-lite", key="own_model")
+        if own_key:
+            set_session_credentials(own_key, own_model)
     st.subheader("Mode")
     st.write(f"**{model_label()}**")
     if not llm_available():
-        st.info("Templates and the built-in question list are in use. " + (config_problem() or "") +
-                " Fix .env to turn on free-form AI.")
+        st.info("Templates and the built-in question list are in use. Paste your own free Gemini key above "
+                "(or set LLM_API_KEY and LLM_MODEL in .env) to turn on free-form AI.")
     st.subheader("Safety")
     st.markdown("- AI-written SQL: SELECT only, approved views only, row limit\n"
                 "- Runs in a read-only transaction\n"

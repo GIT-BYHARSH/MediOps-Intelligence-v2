@@ -10,6 +10,7 @@ so the project always runs. The key is never printed or logged.
 """
 import os
 import re
+import threading
 import time
 
 import requests
@@ -19,10 +20,36 @@ import db  # noqa: F401  (importing db loads the .env file)
 
 _PLACEHOLDERS = {"", "key", "model", "model_name", "base_url"}
 
+# A visitor of the deployed demo can paste their OWN key. It is kept per visitor (thread-local,
+# set again on every page run) and is never written to os.environ, so it cannot leak to other visitors.
+_session = threading.local()
+GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai"
+
+
+def set_session_credentials(api_key=None, model=None, base_url=None):
+    """Use a visitor's own key for the current page run. Call with no key to clear it."""
+    if api_key and api_key.strip():
+        _session.values = {
+            "LLM_API_KEY": api_key.strip(),
+            "LLM_MODEL": (model or "").strip(),
+            "LLM_BASE_URL": (base_url or GEMINI_BASE_URL).strip(),
+            "LLM_REASONING_EFFORT": "low",
+        }
+    else:
+        _session.values = {}
+
+
+def _raw(name):
+    """A setting: the visitor's own key first, then the .env / environment."""
+    override = getattr(_session, "values", None) or {}
+    if name in override:
+        return override[name]
+    return os.environ.get(name, "")
+
 
 def _value(name):
     """A setting from .env, or '' if it is empty or still placeholder text from .env.example."""
-    value = os.environ.get(name, "").strip()
+    value = _raw(name).strip()
     lowered = value.lower()
     if lowered in _PLACEHOLDERS or lowered.startswith(("paste_", "your_", "the_")):
         return ""
@@ -33,7 +60,7 @@ def config_problem():
     """Plain-English reason the LLM cannot be used, or None if the settings look usable."""
     if not _value("LLM_API_KEY") or not _value("LLM_MODEL"):
         return "LLM_API_KEY and LLM_MODEL are empty or still placeholder text in .env."
-    raw_base = os.environ.get("LLM_BASE_URL", "").strip()
+    raw_base = _raw("LLM_BASE_URL").strip()
     if raw_base and not raw_base.startswith(("http://", "https://")):
         return "LLM_BASE_URL in .env must start with https://"
     return None
@@ -67,7 +94,7 @@ def ask_llm(system, user, temperature=0.2, max_tokens=900):
     last_failure["reason"] = None
     if not llm_available():
         return None
-    base = (os.environ.get("LLM_BASE_URL", "").strip() or "https://api.openai.com/v1").rstrip("/")
+    base = (_raw("LLM_BASE_URL").strip() or "https://api.openai.com/v1").rstrip("/")
     try:
         body = {
             "model": _value("LLM_MODEL"),
@@ -80,7 +107,7 @@ def ask_llm(system, user, temperature=0.2, max_tokens=900):
             # so keep it generous or the visible answer comes back empty.
             "max_tokens": max(max_tokens, 4000),
         }
-        effort = os.environ.get("LLM_REASONING_EFFORT", "").strip()
+        effort = _raw("LLM_REASONING_EFFORT").strip()
         if effort:  # optional, e.g. "low" for Gemini 3 models (faster, cheaper)
             body["reasoning_effort"] = effort
         for attempt in range(3):  # busy servers (503) usually clear in seconds

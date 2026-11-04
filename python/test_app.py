@@ -1,9 +1,14 @@
 """Headless test of the Streamlit demo app (no browser).
 Run from the project root:  python python/test_app.py
 """
+import os
 from pathlib import Path
 
-from streamlit.testing.v1 import AppTest
+# Force template mode so the test is predictable and never spends the real AI key's daily quota.
+# ("key" is treated as an unset placeholder; .env does not override an existing variable.)
+os.environ["LLM_API_KEY"] = "key"
+
+from streamlit.testing.v1 import AppTest  # noqa: E402
 
 APP = str(Path(__file__).resolve().parent / "app.py")
 

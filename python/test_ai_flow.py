@@ -5,9 +5,13 @@ Checks: the LLM path works end to end; unsafe SQL from a model is blocked and no
 database; invented numbers are flagged or rejected; the database itself refuses writes in the copilot's
 read-only transaction; everything falls back to templates when the LLM is unavailable.
 """
+import os
 from unittest import mock
 
-from sqlalchemy import text
+# Force template mode unless a test mocks the model, so no real key or quota is ever used.
+os.environ["LLM_API_KEY"] = "key"
+
+from sqlalchemy import text  # noqa: E402
 
 import appeal_letters
 import copilot
@@ -159,6 +163,32 @@ check("What-if base case matches the SQL simulation (21.87 / 16.68 / 14.00)",
       and abs(rec["Quickest first"] - 14.00) < 0.01, str(rec))
 sim_more = whatif.simulate(whatif.load_claims(engine), 20_000, 1.0, 1.0)
 check("More hours recover more", sim_more["recovery_cr"].iloc[0] > sim["recovery_cr"].iloc[0])
+
+# 12. A visitor's own key: works for that visitor only, never touches the shared environment
+import threading  # noqa: E402
+
+import db  # noqa: E402
+import llm  # noqa: E402
+
+llm.set_session_credentials(None)
+check("No key by default", not llm.llm_available())
+llm.set_session_credentials("visitor-key-123", "gemini-3.5-flash-lite")
+check("Visitor key turns the AI on for this visitor", llm.llm_available() and llm.config_problem() is None)
+check("Visitor key is never written to the shared environment",
+      os.environ.get("LLM_API_KEY") == "key" and "visitor-key-123" not in "".join(os.environ.values()))
+seen_elsewhere = []
+worker = threading.Thread(target=lambda: seen_elsewhere.append(llm.llm_available()))
+worker.start()
+worker.join()
+check("Another visitor (another thread) does not get that key", seen_elsewhere == [False], str(seen_elsewhere))
+llm.set_session_credentials(None)
+check("Clearing the key turns the AI off again", not llm.llm_available())
+
+# 13. Cloud database URL
+check("postgres:// URL is made driver-ready", db._sqlalchemy_url("postgres://u:p@h/d?sslmode=require")
+      == "postgresql+psycopg2://u:p@h/d?sslmode=require")
+check("postgresql:// URL is made driver-ready", db._sqlalchemy_url("postgresql://u:p@h/d").startswith(
+    "postgresql+psycopg2://"))
 
 passed = sum(results)
 print(f"\n{passed} of {len(results)} AI flow tests passed")
